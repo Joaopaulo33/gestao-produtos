@@ -70,7 +70,6 @@ Produto::create($validatedData); // Use os dados validados
      */
     public function destroy(Produto $produto)
     {
-        // Aqui a mágica do Soft Delete acontece!
         // O registro não é removido, apenas o campo 'deleted_at' é preenchido.
         $produto->delete();
 

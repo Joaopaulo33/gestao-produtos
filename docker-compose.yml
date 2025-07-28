@@ -1,6 +1,8 @@
 version: '3.8'
 
+# Bloco principal onde todos os serviços (contêineres) são definidos
 services:
+
   # Serviço da Aplicação (PHP)
   app:
     build:
@@ -12,8 +14,8 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
-    depends_on:
-      - db
+    networks: # Adicionado para comunicação
+      - gestao-produtos-net
 
   # Serviço do Banco de Dados (MySQL)
   db:
@@ -22,13 +24,15 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD} # Use a mesma senha do seu .env
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
     volumes:
       - db-data:/var/lib/mysql
     ports:
-      - "3306:3306" # Expõe a porta para o seu PC, se quiser conectar com um cliente de DB
+      - "3306:3306"
+    networks: # Adicionado para comunicação
+      - gestao-produtos-net
 
   # Serviço do Servidor Web (Nginx)
   nginx:
@@ -36,13 +40,35 @@ services:
     container_name: gestao-produtos-nginx
     restart: unless-stopped
     ports:
-      - "8000:80" # Acesse a aplicação em http://localhost:8000
+      - "8000:80"
     volumes:
       - .:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
+    networks: # Adicionado para comunicação
+      - gestao-produtos-net
 
+  # Serviço do phpMyAdmin (Adicionado e Corrigido)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: gestao-produtos-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db # A chave para a conexão funcionar
+    depends_on:
+      - db
+    networks: # Adicionado para comunicação
+      - gestao-produtos-net
+
+# Define a rede que permite a comunicação entre os contêineres
+networks:
+  gestao-produtos-net:
+    driver: bridge
+
+# Define o volume para persistir os dados do banco de dados
 volumes:
   db-data:
     driver: local
